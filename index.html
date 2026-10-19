@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="한글과 영문 타자를 연습하고 나의 성장 기록을 확인하세요.">
+  <title>톡톡 타자 게임</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/script.js"></script>
+</head>
+<body>
+  <dialog id="login-dialog" aria-labelledby="login-title">
+    <form id="login-form">
+      <p class="eyebrow">WELCOME TO TYPE & PLAY</p>
+      <h2 id="login-title">나의 연습을 시작해요</h2>
+      <p>기록을 모아 볼 사용자 아이디를 입력하세요.</p>
+      <label for="user-id">사용자 아이디</label>
+      <input id="user-id" name="userId" maxlength="32" required autocomplete="username" placeholder="아이디 (1~32자)">
+      <p class="footer-small">아이디는 기록 구분용입니다. 개인 정보는 입력하지 마세요.</p>
+      <p id="login-error" class="feedback error" role="alert"></p>
+      <button class="btn btn-primary" type="submit">입장하기</button>
+    </form>
+  </dialog>
+  <main class="app">
+    <header class="header">
+      <div class="brand-mark" aria-hidden="true">타</div>
+      <div><p class="eyebrow">TYPE & PLAY</p><h1>톡톡 타자 게임</h1></div>
+      <div class="user-tools"><strong id="current-user">아이디 입력 대기</strong><button id="history-btn" class="btn btn-secondary" disabled>나의 연습 기록</button></div>
+    </header>
+    <section class="hero">
+      <p class="hero-label">오늘의 타자 연습</p><h2>한 글자씩, 쌓이는 실력</h2>
+      <p class="hero-copy">한글과 영문을 연습하고 매일의 성장을 확인해 보세요.</p>
+    </section>
+    <p id="cloud-status" class="cloud-status" role="status">저장 연결을 확인하고 있습니다.</p>
+    <section class="game-card" aria-label="타자 연습">
+      <div class="stats">
+        <div class="stat"><span id="progress-label" class="stat-label">남은 시간</span><strong id="time">60초</strong></div>
+        <div class="stat"><span class="stat-label">타자 속도</span><strong id="speed">0타/분</strong></div>
+        <div class="stat"><span class="stat-label">정확도</span><strong id="accuracy">100%</strong></div>
+        <div class="stat"><span class="stat-label">오늘 최고 점수</span><strong id="best-score">0점</strong></div>
+      </div>
+      <div class="progress-track" aria-label="연습 진행률"><div id="time-progress" class="progress-fill"></div></div>
+      <div class="settings">
+        <label>연습 언어<select id="language"><option value="ko">한글타자</option><option value="en">영문타자</option></select></label>
+        <label>문제 유형<select id="difficulty"><option value="short">짧은 문장</option><option value="words">단어</option><option value="long">긴문장</option></select></label>
+        <label>진행 방식<select id="mode"><option value="time">시간</option><option value="count">진행횟수</option></select></label>
+        <label id="duration-field">제한 시간<select id="duration"></select></label>
+        <label id="count-field" hidden>진행횟수<select id="target-count"></select></label>
+      </div>
+      <div class="mode-row"><span id="game-status" class="status-pill">시작 대기</span><span id="question-progress">Enter를 눌러 제출하세요</span></div>
+      <div class="prompt-box"><p class="prompt-caption">아래 내용을 입력하세요</p><p id="prompt" class="prompt">시작 버튼을 누르면 첫 번째 문제가 나타납니다.</p></div>
+      <label class="input-label" for="typing-input">여기에 입력하세요 · 입력 후 Enter</label>
+      <textarea id="typing-input" rows="3" placeholder="정답과 오타 모두 Enter를 눌러 제출합니다." disabled spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      <p id="feedback" class="feedback" aria-live="polite">아이디를 입력한 뒤 시작해 주세요.</p>
+      <div class="actions"><button id="start-btn" class="btn btn-primary" disabled>연습 시작</button><button id="restart-btn" class="btn btn-secondary" disabled>연습 취소</button></div>
+    </section>
+    <section id="result-card" class="result-card hidden" aria-live="polite">
+      <p class="eyebrow">YOUR RESULT</p><h2>연습 완료!</h2><p id="result-message"></p>
+      <div class="result-grid">
+        <div><span>최종 점수</span><strong id="final-score">0점</strong></div>
+        <div><span>타자 속도</span><strong id="final-speed">0타/분</strong></div>
+        <div><span>정확도</span><strong id="final-accuracy">100%</strong></div>
+        <div><span>정답 글자</span><strong id="final-characters">0자</strong></div>
+      </div>
+      <button id="result-retry-btn" class="btn btn-primary">다시 도전하기</button>
+    </section>
+    <section class="records-card" aria-labelledby="today-title">
+      <div class="section-heading"><div><p class="eyebrow">TODAY'S PRACTICE</p><h2 id="today-title">오늘의 연습</h2></div><span id="today-date"></span></div>
+      <p id="today-summary">완료한 연습이 없습니다.</p>
+      <div class="table-scroll"><table><caption class="sr-only">오늘 완료한 연습 기록, 최신순</caption><thead><tr><th>회차</th><th>완료 시각</th><th>유형</th><th>설정</th><th>점수</th><th>속도</th><th>정확도</th><th>저장</th></tr></thead><tbody id="today-records"></tbody></table></div>
+      <p class="footer-small">완료한 연습만 집계됩니다. 작업종료를 누르면 오늘의 평균과 최고점수를 DB에 저장합니다.</p>
+      <button id="finish-btn" class="btn btn-primary" disabled>작업종료 · 오늘 기록 저장</button>
+      <p id="save-message" class="feedback" role="status"></p>
+    </section>
+    <section id="history-card" class="records-card" aria-labelledby="history-title" hidden>
+      <div class="section-heading"><div><p class="eyebrow">MY PROGRESS</p><h2 id="history-title">나의 연습 기록</h2></div><button id="history-close" class="btn btn-secondary">닫기</button></div>
+      <p id="history-message" role="status"></p>
+      <div class="table-scroll"><table><caption class="sr-only">날짜별 연습 기록, 최신 날짜순</caption><thead><tr><th>연습 날짜</th><th>연습 수</th><th>평균 점수</th><th>최고 점수</th><th>평균 속도</th><th>평균 정확도</th></tr></thead><tbody id="history-records"></tbody></table></div>
+      <h3>날짜별 최고점수</h3><p class="footer-small">왼쪽부터 오래된 날짜순입니다. 점수에 마우스를 올리면 값을 볼 수 있습니다.</p>
+      <div id="history-chart" class="chart"></div>
+    </section>
+    <footer><p>매일 조금씩 연습하면 타자 실력이 자랍니다.</p><p class="footer-small">날짜 기준: 한국 시간 · 창을 그냥 닫으면 DB에 저장하지 않습니다.</p></footer>
+  </main>
+</body>
+</html>
