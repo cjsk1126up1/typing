@@ -17,6 +17,7 @@ test('DB 규칙은 인증 없는 읽기와 쓰기를 거절', async () => {
   const url = `http://127.0.0.1:9000/practice/unauthorized/days/2026-10-19.json?ns=${namespace}`;
   assert.equal((await fetch(url)).status, 401);
   assert.equal((await fetch(url, { method:'PUT', body:'{}' })).status, 401);
+  assert.equal((await fetch(`http://127.0.0.1:9000/leaderboard.json?ns=${namespace}`)).status, 401);
 });
 test('인증된 요청도 필수 필드가 없는 일일 기록은 저장 불가', async () => {
   const db = new PracticeDatabase(config, localRequest);
@@ -40,4 +41,8 @@ test('서로 다른 클라이언트 동시 저장은 두 회차를 모두 보존
   assert.equal(history[0].highestScore, 200);
   assert.equal(Object.keys(history[0].attempts).length, 2);
   assert.match(userKey(userId), /^[a-f0-9]+$/);
+  const ranked = (await first.leaderboard()).find(user => user.userId === userId);
+  assert.equal(ranked.attemptCount, 2);
+  assert.equal(ranked.highestScore, 200);
+  assert.equal(ranked.averageScore, 150);
 });

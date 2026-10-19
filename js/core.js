@@ -59,6 +59,42 @@ export function mergeDaily(existing, userId, date, attempts, updatedAt = Date.no
   return { userId, practiceDate: date, ...summarize(merged), attempts: merged, updatedAt, schemaVersion: 1 };
 }
 
+export function mergeLeaderboard(existing, daily) {
+  const days = { ...(existing?.days || {}) };
+  const previous = days[daily.practiceDate];
+  // 뒤늦게 도착한 동일 날짜의 오래된 응답이 더 많은 회차를 덮어쓰지 않게 합니다.
+  if (!previous || daily.attemptCount >= previous.attemptCount) {
+    const attempts = Object.values(daily.attempts || {});
+    const total = field => attempts.reduce((sum, attempt) => sum + attempt[field], 0);
+    days[daily.practiceDate] = {
+      highestScore: daily.highestScore, attemptCount: daily.attemptCount,
+      totalScore: total('score'), totalSpeed: total('speed'), totalAccuracy: total('accuracy')
+    };
+  }
+  const dates = Object.keys(days).sort().reverse();
+  const total = field => Object.values(days).reduce((sum, item) => sum + item[field], 0);
+  const attemptCount = total('attemptCount');
+  const highestScore = Math.max(0, ...Object.values(days).map(item => item.highestScore));
+  const average = field => attemptCount ? Math.round(total(field) / attemptCount * 100) / 100 : 0;
+  return {
+    userId: daily.userId, highestScore, attemptCount,
+    averageScore: average('totalScore'), averageSpeed: average('totalSpeed'), averageAccuracy: average('totalAccuracy'),
+    practiceDays: dates.length, lastPracticeDate: dates[0],
+    bestDate: dates.find(date => days[date].highestScore === highestScore),
+    days, updatedAt: Date.now()
+  };
+}
+
+export function rankUsers(records) {
+  const users = Object.values(records || {}).filter(record => record?.attemptCount > 0)
+    .sort((a, b) => b.highestScore - a.highestScore || a.userId.localeCompare(b.userId, 'ko'));
+  let rank = 0;
+  return users.map((record, index) => {
+    if (!index || record.highestScore !== users[index - 1].highestScore) rank = index + 1;
+    return { ...record, rank };
+  });
+}
+
 export function shuffled(source, random = Math.random) {
   const result = [...source];
   for (let i = result.length - 1; i > 0; i--) {

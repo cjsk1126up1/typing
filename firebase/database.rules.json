@@ -2,6 +2,35 @@
   "rules": {
     ".read": false,
     ".write": false,
+    "leaderboard": {
+      ".read": "auth != null",
+      "$userKey": {
+        ".write": "auth != null && newData.exists() && root.child('practice').child($userKey).child('days').exists()",
+        ".validate": "newData.hasChildren(['userId', 'highestScore', 'attemptCount', 'averageScore', 'averageSpeed', 'averageAccuracy', 'practiceDays', 'lastPracticeDate', 'bestDate', 'days', 'updatedAt']) && newData.child('userId').val() === root.child('practice').child($userKey).child('days').child(newData.child('lastPracticeDate').val()).child('userId').val() && newData.child('highestScore').val() === root.child('practice').child($userKey).child('days').child(newData.child('bestDate').val()).child('highestScore').val()",
+        "userId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32" },
+        "highestScore": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "attemptCount": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "averageScore": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "averageSpeed": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "averageAccuracy": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+        "practiceDays": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "lastPracticeDate": { ".validate": "newData.isString() && newData.val().matches(/^\\d{4}-\\d{2}-\\d{2}$/)" },
+        "bestDate": { ".validate": "newData.isString() && newData.val().matches(/^\\d{4}-\\d{2}-\\d{2}$/)" },
+        "updatedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "days": {
+          "$date": {
+            ".validate": "newData.hasChildren(['highestScore', 'attemptCount', 'totalScore', 'totalSpeed', 'totalAccuracy']) && newData.child('highestScore').val() === root.child('practice').child($userKey).child('days').child($date).child('highestScore').val() && newData.child('attemptCount').val() === root.child('practice').child($userKey).child('days').child($date).child('attemptCount').val()",
+            "highestScore": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "attemptCount": { ".validate": "newData.isNumber() && newData.val() > 0" },
+            "totalScore": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "totalSpeed": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "totalAccuracy": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
     "practice": {
       "$userKey": {
         "days": {

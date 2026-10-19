@@ -82,7 +82,21 @@ node js/tests/browser.test.js
 4. Vercel에서 GitHub 저장소를 가져온다. Framework Preset은 Other, Root Directory는 루트, Build Command는 비워 두고 Output Directory는 `.`로 설정한다. 별도 패키지 설치가 필요 없다.
 5. 배포 URL에서 최초 팝업, 한글/영문 연습, Enter 제출, 작업종료 저장, 다른 브라우저에서 기록 조회와 그래프까지 다시 확인한다.
 
-Firebase 프로젝트 설정 및 GitHub/Vercel 대상과 인증이 제공되기 전에는 실제 클라우드 연동·업로드·배포가 완료된 상태가 아니다.
+운영 대상은 Firebase `typing-1d78b`, GitHub `cjsk1126up1/typing`, Vercel `https://typing-xi-nine.vercel.app/`이다. 웹 앱 설정은 반영했다. 실제 인증과 DB 규칙을 적용하고 GitHub 쓰기 권한을 확인하기 전에는 실제 클라우드 연동·업로드·배포가 완료된 상태가 아니다.
+
+### 공개 순위
+아이디로 입장한 모든 사용자는 순위보기로 저장된 연습의 역대 최고점수 순위를 조회할 수 있다. 관리자 기능은 없다. 공개 순위는 `leaderboard/{아이디 UTF-8 hex}`에 날짜별 요약과 전체 평균을 저장한다. `firebase/database.rules.json`에는 이 경로의 읽기 및 쓰기 규칙도 포함되어 있다. 일일 저장과 순위 저장을 모두 적용해야 한다.
+
+### GitHub 권한 설정
+현재 인증된 `bosikcheon` 계정에 대상 저장소 쓰기 권한이 필요하다.
+1. 소유자 `cjsk1126up1` 계정으로 GitHub에 로그인한다.
+2. `https://github.com/cjsk1126up1/typing/settings/access`에서 Collaborators → Add people을 누른다.
+3. `bosikcheon`을 검색하여 해당 저장소에 초대한다.
+4. `bosikcheon` 계정으로 전환하여 이메일이나 GitHub 알림에서 초대를 수락한다.
+5. 초대 수락 후 push 권한을 확인한다. 개인 저장소의 공동 작업자는 코드 읽기/쓰기가 가능하며 관리자 권한은 필요 없다.
+
+### Firebase 운영 설정 확인
+현재 제공된 키의 익명 인증 요청은 `CONFIGURATION_NOT_FOUND`를 반환한다. 소유 계정으로 Firebase Console의 Authentication을 시작하고 Sign-in method에서 Anonymous를 활성화한다. Realtime Database의 Rules 탭에는 제공한 `firebase/database.rules.json`을 적용한다. 이 PC의 Firebase CLI 계정은 대상 프로젝트 접근이 403이므로 다른 프로젝트의 설정을 수정하지 않는다.
 
 ## 공식 API 참고
 - [Firebase REST 데이터 쓰기와 ETag](https://firebase.google.com/docs/database/rest/save-data)

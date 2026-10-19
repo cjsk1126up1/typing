@@ -89,6 +89,7 @@ function updateControls() {
   $('result-retry-btn').disabled = busy;
   $('finish-btn').disabled = busy;
   $('history-btn').disabled = !userId || loggingIn;
+  $('ranking-btn').disabled = !userId || loggingIn;
 }
 function selectedConfig() {
   return { language: $('language').value, type: $('difficulty').value, mode: $('mode').value,
@@ -241,7 +242,8 @@ async function syncApproved() {
     message('cloud-status', 'Firebase Realtime Database 연결됨');
     message('save-message', '작업종료 완료! 날짜별 평균과 최고점수를 DB에 저장했습니다.', 'success');
   } catch (error) {
-    message('save-message', `저장되지 않았습니다. ${error.message} 완료 기록은 이 브라우저에 보관하며 작업종료로 재시도할 수 있습니다.`, 'error');
+    const state = error.dailySaved ? '순위 저장을 마치지 못했습니다.' : '저장되지 않았습니다.';
+    message('save-message', `${state} ${error.message} 완료 기록은 이 브라우저에 보관하며 작업종료로 재시도할 수 있습니다.`, 'error');
     message('cloud-status', db.available ? 'DB 연결 오류 · 저장 재시도가 필요합니다.' : 'Firebase 미설정 · 연습은 가능하지만 DB 저장과 조회에는 연결 설정이 필요합니다.');
   } finally {
     saving = false;
@@ -327,6 +329,28 @@ async function showHistory() {
   } finally { $('history-btn').disabled = false; }
   $('history-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+async function showRanking() {
+  if (!userId) return;
+  $('ranking-card').hidden = false;
+  $('ranking-records').replaceChildren();
+  message('ranking-message', '전체 사용자의 순위를 불러오고 있습니다.');
+  $('ranking-btn').disabled = true;
+  try {
+    const users = await db.leaderboard();
+    message('ranking-message', users.length ? `총 ${users.length}명이 연습했어요. 내 기록은 강조되어 표시됩니다.` : '아직 저장된 연습 기록이 없습니다. 첫 번째 기록에 도전해 보세요.');
+    for (const record of users) {
+      cells($('ranking-records'), [
+        `${record.rank}위`, record.userId === userId ? `${record.userId} (나)` : record.userId,
+        `${record.highestScore}점`, `${record.averageSpeed}타/분`, `${record.averageAccuracy}%`,
+        `${record.attemptCount}회`, record.lastPracticeDate
+      ]);
+      if (record.userId === userId) $('ranking-records').lastElementChild.classList.add('my-ranking');
+    }
+  } catch (error) {
+    message('ranking-message', `순위를 불러오지 못했습니다. ${error.message}`);
+  } finally { $('ranking-btn').disabled = false; }
+  $('ranking-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 $('login-form').addEventListener('submit', async event => {
   event.preventDefault();
   try { userId = validateUserId($('user-id').value); }
@@ -352,6 +376,8 @@ $('result-retry-btn').addEventListener('click', startGame);
 $('finish-btn').addEventListener('click', finishWork);
 $('history-btn').addEventListener('click', showHistory);
 $('history-close').addEventListener('click', () => { $('history-card').hidden = true; });
+$('ranking-btn').addEventListener('click', showRanking);
+$('ranking-close').addEventListener('click', () => { $('ranking-card').hidden = true; });
 settings.forEach(id => $(id).addEventListener('change', () => {
   $('duration-field').hidden = $('mode').value !== 'time';
   $('count-field').hidden = $('mode').value !== 'count';

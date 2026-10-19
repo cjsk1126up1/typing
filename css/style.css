@@ -455,6 +455,8 @@ td { padding: 14px 10px; border-bottom: 1px solid var(--line); }
 #save-message { line-height: 1.8; margin-bottom: 0; }
 .chart { width: 100%; overflow-x: auto; background: #f8fbfc; border-radius: 15px; }
 .chart svg { display: block; min-width: 100%; }
+.my-ranking { background: #e8f7f2; color: #166b61; font-weight: 700; }
+#ranking-card > p { font-size: 13px; line-height: 1.8; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 dialog { width: min(450px, calc(100% - 36px)); padding: 32px; border: 1px solid var(--line); border-radius: 22px; color: var(--ink); box-shadow: 0 22px 90px #152c3c44; }
 dialog::backdrop { background: #12263888; backdrop-filter: blur(5px); }

@@ -19,6 +19,7 @@ const ok = description => { checks++; console.log(`PASS ${checks}: ${description
 const context = await browser.newContext({ viewport: { width: 1280, height: 1000 } });
 let putCount = 0;
 let rejectWrites = false;
+let rejectLeaderboard = false;
 await context.route('**/js/firebase-config.js', route => route.fulfill({
   contentType: 'application/javascript',
   body: `export const firebaseConfig = {apiKey:'fake-api-key',projectId:'demo-typing-game',databaseURL:'https://demo-typing-game.firebaseio.com'};`
@@ -30,9 +31,13 @@ await context.route(/https:\/\/(identitytoolkit|securetoken)\.googleapis\.com\//
 });
 await context.route('https://demo-typing-game.firebaseio.com/**', async route => {
   const original = new URL(route.request().url());
-  if (route.request().method() === 'PUT') {
+  if (route.request().method() === 'PUT' && original.pathname.startsWith('/practice/')) {
     putCount++;
     if (rejectWrites) { await route.fulfill({ status: 503, body: '{"error":"test offline"}', contentType: 'application/json' }); return; }
+  }
+  if (rejectLeaderboard && route.request().method() === 'PUT' && original.pathname.startsWith('/leaderboard/')) {
+    await route.fulfill({status:503,body:'{"error":"ranking offline"}',contentType:'application/json'});
+    return;
   }
   original.searchParams.set('ns', 'demo-typing-game-default-rtdb');
   const response = await route.fetch({ url: `http://127.0.0.1:9000${original.pathname}${original.search}` });
@@ -84,6 +89,11 @@ try {
   assert.equal(await page.locator('#history-message').textContent(), '이전자료가 없습니다.');
   await page.locator('#history-close').click();
   ok('새 아이디의 빈 DB 기록 안내');
+  await page.locator('#ranking-btn').click();
+  await page.waitForFunction(() => !document.getElementById('ranking-btn').disabled);
+  assert.equal(await page.locator('#ranking-records tr').filter({hasText:id}).count(), 0);
+  await page.locator('#ranking-close').click();
+  ok('접속한 사용자의 순위 조회와 미연습 아이디 순위 제외');
   await page.locator('#mode').selectOption('count');
   await page.locator('#target-count').selectOption('5');
   await page.locator('#start-btn').click();
@@ -137,6 +147,19 @@ try {
   await page.locator('#finish-btn').click();
   assert.equal(putCount, 1);
   ok('실제 Firebase 에뮬레이터 저장·조회·단일 날짜 그래프·재저장 중복 방지');
+  await page.locator('#ranking-btn').click();
+  await page.waitForFunction(() => !document.getElementById('ranking-btn').disabled);
+  const ownRank = page.locator('#ranking-records tr.my-ranking');
+  assert.equal(await ownRank.count(), 1);
+  assert.match(await ownRank.textContent(), /\(나\)/);
+  assert.match(await ownRank.textContent(), /2회/);
+  await page.locator('#ranking-card').screenshot({path:path.join(screenshots,'ranking-desktop.png')});
+  await page.setViewportSize({width:390,height:844});
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  await page.locator('#ranking-card').screenshot({path:path.join(screenshots,'ranking-mobile.png')});
+  await page.setViewportSize({width:1280,height:1000});
+  await page.locator('#ranking-close').click();
+  ok('작업종료 후 공개 순위 반영·내 아이디 강조·모바일 순위 화면');
   await page.reload();
   await login();
   assert.equal(await page.locator('#today-records tr').count(), 2);
@@ -208,10 +231,26 @@ try {
   await fresh.locator('#history-btn').click();
   await fresh.waitForFunction(() => !document.getElementById('history-btn').disabled);
   assert.equal(await fresh.locator('#history-records tr').count(), 2);
+  await fresh.locator('#ranking-btn').click();
+  await fresh.waitForFunction(() => !document.getElementById('ranking-btn').disabled);
+  assert.equal(await fresh.locator('#ranking-records tr.my-ranking').count(), 1);
   await device.close();
   ok('새 브라우저에서 같은 아이디의 과거 기록 조회');
   await page.setViewportSize({ width:1280, height:1000 });
   await page.locator('#history-close').click();
+  await five();
+  rejectLeaderboard = true;
+  await page.locator('#finish-btn').click();
+  await page.waitForFunction(() => document.getElementById('save-message').textContent.includes('순위 반영에 실패'));
+  assert.match(await page.locator('#today-records tr:first-child').textContent(), /저장 대기/);
+  rejectLeaderboard = false;
+  await page.locator('#finish-btn').click();
+  await page.waitForFunction(() => document.getElementById('save-message').textContent.startsWith('작업종료 완료'));
+  await page.locator('#ranking-btn').click();
+  await page.waitForFunction(() => !document.getElementById('ranking-btn').disabled);
+  assert.match(await page.locator('#ranking-records tr.my-ranking').textContent(), /6회/);
+  await page.locator('#ranking-close').click();
+  ok('일일 저장 후 순위 반영만 실패해도 재시도 시 중복 없이 복구');
   for (const language of ['ko', 'en']) {
     for (const type of ['words', 'short', 'long']) {
       await page.locator('#language').selectOption(language);

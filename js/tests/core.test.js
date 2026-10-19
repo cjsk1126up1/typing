@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { practiceDate, validateUserId, userKey, measure, resultMetrics, summarize, mergeDaily, nextQuestion } from '../core.js';
+import { practiceDate, validateUserId, userKey, measure, resultMetrics, summarize, mergeDaily, mergeLeaderboard, rankUsers, nextQuestion } from '../core.js';
 import { questions } from '../questions.js';
 import { PracticeDatabase } from '../firebase.js';
 
@@ -76,8 +76,28 @@ test('Firebase ETag 충돌 시 다시 읽어 동시 기록을 합산', async () 
     return new Response(JSON.stringify(reads === 1 ? null : mergeDaily(null, '테스트', '2026-10-19', [attempt('other', 200)])), { headers: { ETag: reads === 1 ? '"one"' : '"two"' } });
   });
   db.session = { idToken: 'test', expiresAt: Date.now() + 3600000 };
+  db.publishLeaderboard = async () => {};
   const saved = await db.saveDay('테스트', '2026-10-19', [attempt('mine')]);
   assert.equal(reads, 2);
   assert.equal(writes, 2);
   assert.equal(saved.highestScore, 200);
+});
+test('여러 날짜 순위는 역대 최고와 회차별 평균을 유지하고 오래된 응답은 무시', () => {
+  const first = mergeDaily(null, '테스트', '2026-10-19', [attempt('a', 100)]);
+  const full = mergeDaily(first, '테스트', '2026-10-19', [attempt('b', 200)]);
+  let ranked = mergeLeaderboard(null, full);
+  ranked = mergeLeaderboard(ranked, first);
+  assert.equal(ranked.attemptCount, 2);
+  assert.equal(ranked.highestScore, 200);
+  const next = { ...attempt('c', 300), date:'2026-10-20' };
+  ranked = mergeLeaderboard(ranked, mergeDaily(null, '테스트', next.date, [next]));
+  assert.equal(ranked.attemptCount, 3);
+  assert.equal(ranked.averageScore, 200);
+  assert.equal(ranked.practiceDays, 2);
+  assert.equal(ranked.bestDate, '2026-10-20');
+});
+test('최고점수 내림차순 및 동점 공동순위, 미연습 사용자 제외', () => {
+  const result = rankUsers({ a:{userId:'가', highestScore:100, attemptCount:1}, b:{userId:'나', highestScore:200, attemptCount:1}, c:{userId:'다', highestScore:200, attemptCount:2}, d:{userId:'미연습', highestScore:0, attemptCount:0} });
+  assert.deepEqual(result.map(user => user.rank), [1, 1, 3]);
+  assert.deepEqual(result.map(user => user.highestScore), [200, 200, 100]);
 });
