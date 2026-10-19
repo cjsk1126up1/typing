@@ -1,0 +1,12 @@
+# 로컬 실행 및 테스트 산출물
+logs/
+*-debug.log
+node_modules/
+.firebase/
+.vercel/
+# 자격 증명은 소스에 포함하지 않음
+.env
+.env.*
+*service-account*.json
+*serviceAccount*.json
+*.pem
