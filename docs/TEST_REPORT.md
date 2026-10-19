@@ -73,8 +73,17 @@
 - `images/tests/ranking-desktop.png`, `images/tests/ranking-mobile.png`는 에뮬레이터에서 생성한 테스트 전용 순위 화면이다.
 
 ### 실제 운영 대상 확인
-- Firebase 익명 인증 호출은 `CONFIGURATION_NOT_FOUND`를 반환한다. Authentication 초기 설정 및 익명 로그인 활성화가 필요하다.
+- 초기 Firebase 익명 인증 호출은 `CONFIGURATION_NOT_FOUND`를 반환했으나 사용자가 활성화한 뒤 정상 인증된다.
 - 현재 Firebase CLI 인증 계정의 `typing-1d78b` 프로젝트 관리 API 접근은 HTTP 403으로 거절된다. 다른 프로젝트에는 변경을 적용하지 않았다.
-- GitHub 저장소 `cjsk1126up1/typing`의 main 브랜치를 fetch하고 기존 파일을 확인했다. 현재 인증 사용자 `bosikcheon`은 pull 가능, push 불가다. CLI push dry-run도 403으로 거절되었다.
-- Vercel `https://typing-xi-nine.vercel.app/`는 HTTP 200이며 기존 아이디 팝업 소스는 확인되지만 순위보기는 아직 없는 버전이다.
-- 운영 Firebase 저장/조회 및 수정본 GitHub 업로드·Vercel 배포는 권한/운영 설정이 해결된 뒤 별도로 검증해야 한다.
+- GitHub 저장소 `cjsk1126up1/typing`에 대한 `bosikcheon`의 초기 push 요청은 거절되었으나 공동 작업자 권한 부여 후 main 업로드가 성공했다. 기존 GitHub 커밋을 부모로 병합하여 원격 이력을 보존했다.
+- 최초 확인한 Vercel 주소는 이전 버전이었으나 main 업로드 후 새 버전이 배포되었고 Vercel 상태도 success로 확인됐다.
+
+### 운영 URL 및 실제 DB 최종 검증 (완료)
+- 운영 주소: `https://typing-xi-nine.vercel.app/`.
+- 배포 소스: 공개 순위, 실제 Firebase 설정, Enter 제출 로직 포함. HTML 및 ES 모듈 URL은 HTTP 200이다.
+- `node js/tests/production.test.js`: 실제 운영 URL에서 아이디 팝업·상단 표시·순위 버튼·영문 단어·오타 Enter 제출·5회 종료·당일 기록을 확인했다. 페이지 JavaScript 오류는 없었다.
+- `node js/tests/production.test.js --database`: 실제 Firebase에 작업종료 저장 후 과거 기록·날짜 그래프·공개 순위와 내 아이디 강조까지 확인했다.
+- 검증용 아이디 `배포검증_1792426386762`로 2026-10-20 완료 기록 1개를 실제 DB에 남겼다. 최고점수 23점, 연습 횟수 1회로 조회되었다.
+- 브라우저와 다른 별도 인증 세션에서 같은 아이디의 `userId`, `practiceDate`, `highestScore`, `attemptCount` 및 공개 순위 일치를 확인했다.
+- 인증 토큰 없는 공개 순위 REST 요청은 HTTP 401로 거절되는 것을 확인했다.
+- 운영 검증 이미지: `images/tests/production-screen.png`, `images/tests/production-ranking.png`.

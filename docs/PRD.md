@@ -99,7 +99,7 @@ typing_game/
 
 ## 테스트 및 배포 상태
 - Python 서버 테스트, 핵심 집계 테스트, Firebase Authentication/Realtime Database 에뮬레이터 테스트를 수행한다. 결과는 TEST_REPORT.md에 기록한다.
-- Firebase 웹 설정과 GitHub/Vercel 운영 주소는 제공받아 소스에 반영했다. 실제 Firebase Authentication 활성화와 프로젝트 접근 권한, GitHub 저장소 쓰기 권한 확인이 필요하다.
+- Firebase 웹 설정과 GitHub/Vercel 운영 주소를 소스에 반영했다. 2026-10-20에 Firebase 익명 인증·DB 규칙 적용과 GitHub 저장소 쓰기 권한을 확인하고 실제 배포를 완료했다.
 - 실제 클라우드 설정 및 배포가 끝나기 전에는 로컬 검증과 운영 검증을 구분해 보고한다.
 - 연결 순서와 실행 방법은 SETUP.md를 참고한다.
 
@@ -117,6 +117,7 @@ typing_game/
 - Firebase: `typing-1d78b`, Asia Southeast 1 Realtime Database. 공개 웹 설정은 `js/firebase-config.js`에 반영했다.
 - GitHub: `cjsk1126up1/typing`, 기본 브랜치 `main`.
 - Vercel: `https://typing-xi-nine.vercel.app/`.
+- GitHub main에 업로드한 소스를 Vercel Git 연동으로 배포하고 운영 주소에서 실제 저장, 과거 기록, 그래프, 공개 순위까지 확인했다. 테스트용 아이디의 완료 기록 1개가 저장되어 있다.
 
 ## 변경 이력
 - 2026-10-19: 오타가 있어도 Enter로 다음 문제로 진행하도록 변경했다.
@@ -124,3 +125,4 @@ typing_game/
 - 2026-10-19: CSS/JS 폴더 구조를 정리하고 AGENTS.md와 docs/PRD.md를 생성했다.
 - 2026-10-19: 아이디 팝업, 한글/영문, 시간/진행횟수, 문제 은행 확장, 당일 완료 기록, 정상 종료 저장, 날짜 변경 정산, 과거 기록과 그래프, Firebase REST 연결을 추가했다. Python·Firebase 에뮬레이터 테스트와 GitHub/Vercel 배포 절차를 문서화했다.
 - 2026-10-20: 실제 Firebase 웹 설정과 공개 순위를 추가했다. 순위의 동점·일일 가중 평균·부분 저장 복구를 명세하고 운영 GitHub/Vercel 대상을 기록했다.
+- 2026-10-20: Firebase 소유자의 익명 로그인 및 규칙 적용, GitHub 쓰기 권한 설정 후 운영 배포와 실제 DB 검증을 완료했다.
